@@ -22,6 +22,7 @@ class OpenAIChat implements ChatCapability {
   bool _hasReasoningContent = false;
   String _lastChunk = '';
   final StringBuffer _thinkingBuffer = StringBuffer();
+  final Map<int, Map<String, dynamic>> _toolCallBuffer = {};
 
   OpenAIChat(this.client, this.config);
 
@@ -285,7 +286,8 @@ class OpenAIChat implements ChatCapability {
 
       if (message != null) {
         // Check for reasoning content in various possible fields
-        thinkingContent = message['reasoning'] as String? ??
+        thinkingContent =
+            message['reasoning'] as String? ??
             message['thinking'] as String? ??
             message['reasoning_content'] as String?;
 
@@ -345,6 +347,7 @@ class OpenAIChat implements ChatCapability {
     _hasReasoningContent = false;
     _lastChunk = '';
     _thinkingBuffer.clear();
+    _toolCallBuffer.clear();
   }
 
   /// Parse stream events with reasoning support
@@ -411,14 +414,40 @@ class OpenAIChat implements ChatCapability {
 
     // Handle tool calls
     final toolCalls = delta['tool_calls'] as List?;
-    if (toolCalls != null && toolCalls.isNotEmpty) {
-      final toolCall = toolCalls.first as Map<String, dynamic>;
-      if (toolCall.containsKey('id') && toolCall.containsKey('function')) {
-        try {
-          events.add(ToolCallDeltaEvent(ToolCall.fromJson(toolCall)));
-        } catch (e) {
-          // Skip malformed tool calls
-          client.logger.warning('Failed to parse tool call: $e');
+    if (toolCalls != null) {
+      for (final toolCall in toolCalls) {
+        final index = toolCall['index'] as int?;
+        if (index == null) continue;
+
+        _toolCallBuffer.putIfAbsent(
+          index,
+          () => <String, dynamic>{
+            'index': index,
+            'function': <String, dynamic>{'arguments': ''},
+          },
+        );
+
+        final current = _toolCallBuffer[index]!;
+
+        if (toolCall.containsKey('id')) {
+          current['id'] = toolCall['id'];
+        }
+        if (toolCall.containsKey('type')) {
+          current['type'] = toolCall['type'];
+        }
+
+        if (toolCall.containsKey('function')) {
+          final function = toolCall['function'] as Map<String, dynamic>;
+          final currentFn = current['function'] as Map<String, dynamic>;
+
+          if (function.containsKey('name')) {
+            currentFn['name'] = function['name'];
+          }
+          if (function.containsKey('arguments')) {
+            currentFn['arguments'] =
+                (currentFn['arguments'] as String) +
+                (function['arguments'] as String);
+          }
         }
       }
     }
@@ -426,9 +455,19 @@ class OpenAIChat implements ChatCapability {
     // Check for finish reason
     final finishReason = choice['finish_reason'] as String?;
     if (finishReason != null) {
+      // Flush accumulated tool calls
+      for (final toolCallJson in _toolCallBuffer.values) {
+        try {
+          events.add(ToolCallDeltaEvent(ToolCall.fromJson(toolCallJson)));
+        } catch (e) {
+          client.logger.warning('Failed to parse tool call: $e');
+        }
+      }
+
       final usage = json['usage'] as Map<String, dynamic>?;
-      final thinkingContent =
-          thinkingBuffer.isNotEmpty ? thinkingBuffer.toString() : null;
+      final thinkingContent = thinkingBuffer.isNotEmpty
+          ? thinkingBuffer.toString()
+          : null;
 
       final response = OpenAIChatResponse({
         'choices': [
