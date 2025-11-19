@@ -151,12 +151,9 @@ class GoogleClient {
         yield remaining;
       }
     } on DioException catch (e) {
-      logger.severe('Stream request failed: ${e.message}');
-      logger.severe('Status code: ${e.response?.statusCode}');
-      logger.severe('Request URL: ${e.requestOptions.uri}');
-      if (e.response?.data != null) {
-        logger.severe('Response data: ${e.response?.data}');
-      }
+      logger.warning(
+        'Google API stream request failed: ${e.response?.statusCode ?? "network error"} - ${e.message}',
+      );
       rethrow;
     }
   }

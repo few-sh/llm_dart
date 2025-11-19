@@ -231,56 +231,20 @@ class GoogleChat implements ChatCapability {
       }
     }
 
-    // Handle 404 errors specifically for Google API
+    // Handle 404 - model doesn't exist
     if (e.response?.statusCode == 404) {
-      final uri = e.requestOptions.uri;
-      client.logger.severe('Google API 404 Error');
-      client.logger.severe('Full URL: $uri');
-      client.logger.severe('Base URL: ${config.baseUrl}');
-      client.logger.severe('Model: ${config.model}');
-      client.logger.severe('Endpoint path: ${uri.path}');
-
-      // Try to get error details from response
-      String errorDetails = '';
-      if (e.response?.data != null) {
-        client.logger.severe('Response data: ${e.response?.data}');
-        if (e.response?.data is Map<String, dynamic>) {
-          final data = e.response!.data as Map<String, dynamic>;
-          if (data.containsKey('error')) {
-            final error = data['error'];
-            if (error is Map && error.containsKey('message')) {
-              errorDetails = '\n\n${error['message']}';
-            }
-          }
-        }
-      }
-
       return ProviderError(
-        'Model "${config.model}" does not exist or is not available.$errorDetails\n\n'
-        'Common issues:\n'
-        '• The model name may be incorrect (check for typos like "-latest" suffixes)\n'
-        '• The model may not be released yet\n'
-        '• Your API key may not have access to this model\n'
-        '• The model may not be available in your region\n\n'
-        'Try using a stable model like "gemini-1.5-flash" or "gemini-2.5-flash" instead.',
+        'Model "${config.model}" not found. Check the model name (avoid "-latest" suffixes). '
+        'Try "gemini-1.5-flash" or "gemini-2.5-flash".',
       );
     }
 
-    // Handle 400 errors - log the response for debugging
-    if (e.response?.statusCode == 400) {
-      client.logger.severe('Google API 400 Error - URL: ${e.requestOptions.uri}');
-      client.logger.severe('Response data: ${e.response?.data}');
-      client.logger.severe('Request data: ${e.requestOptions.data}');
-
-      // Try to extract error message from response
-      if (e.response?.data is Map<String, dynamic>) {
-        final data = e.response!.data as Map<String, dynamic>;
-        if (data.containsKey('error')) {
-          final error = data['error'];
-          if (error is Map && error.containsKey('message')) {
-            return ProviderError('Google API Error: ${error['message']}');
-          }
-        }
+    // Handle 400 - bad request
+    if (e.response?.statusCode == 400 && e.response?.data is Map) {
+      final data = e.response!.data as Map;
+      final error = data['error'];
+      if (error is Map && error['message'] != null) {
+        return ProviderError('${error['message']}');
       }
     }
 
