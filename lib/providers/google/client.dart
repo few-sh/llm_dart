@@ -65,9 +65,12 @@ class GoogleClient {
     Map<String, dynamic> data, {
     CancelToken? cancelToken,
   }) async {
+    final fullEndpoint = _getEndpointWithAuth(endpoint);
+    logger.fine('Google API POST request to: ${config.baseUrl}$endpoint');
+    logger.fine('Model: ${config.model}');
     return HttpResponseHandler.postJson(
       dio,
-      _getEndpointWithAuth(endpoint),
+      fullEndpoint,
       data,
       providerName: 'Google',
       logger: logger,
@@ -106,6 +109,9 @@ class GoogleClient {
   }) async* {
     try {
       final fullEndpoint = _getEndpointWithAuth(endpoint);
+      logger.fine('Google API Stream POST request to: ${config.baseUrl}$endpoint');
+      logger.fine('Full endpoint with auth: $fullEndpoint');
+      logger.fine('Model: ${config.model}');
       final response = await dio.post(
         fullEndpoint,
         data: data,
@@ -146,6 +152,11 @@ class GoogleClient {
       }
     } on DioException catch (e) {
       logger.severe('Stream request failed: ${e.message}');
+      logger.severe('Status code: ${e.response?.statusCode}');
+      logger.severe('Request URL: ${e.requestOptions.uri}');
+      if (e.response?.data != null) {
+        logger.severe('Response data: ${e.response?.data}');
+      }
       rethrow;
     }
   }
