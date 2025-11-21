@@ -73,12 +73,12 @@ class ProviderDefaults {
 
   // Anthropic
   static const String anthropicBaseUrl = 'https://api.anthropic.com/v1/';
-  static const String anthropicDefaultModel = 'claude-sonnet-4-20250514';
+  static const String anthropicDefaultModel = 'claude-sonnet-4';
 
   // Google (Gemini)
   static const String googleBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta/';
-  static const String googleDefaultModel = 'gemini-1.5-flash';
+  static const String googleDefaultModel = 'gemini-2.5-flash';
 
   // DeepSeek
   static const String deepseekBaseUrl = 'https://api.deepseek.com/v1/';
@@ -148,35 +148,17 @@ class ProviderDefaults {
           'supportedImageFormats': openaiSupportedImageFormats,
         };
       case 'anthropic':
-        return {
-          'baseUrl': anthropicBaseUrl,
-          'model': anthropicDefaultModel,
-        };
+        return {'baseUrl': anthropicBaseUrl, 'model': anthropicDefaultModel};
       case 'google':
-        return {
-          'baseUrl': googleBaseUrl,
-          'model': googleDefaultModel,
-        };
+        return {'baseUrl': googleBaseUrl, 'model': googleDefaultModel};
       case 'deepseek':
-        return {
-          'baseUrl': deepseekBaseUrl,
-          'model': deepseekDefaultModel,
-        };
+        return {'baseUrl': deepseekBaseUrl, 'model': deepseekDefaultModel};
       case 'groq':
-        return {
-          'baseUrl': groqBaseUrl,
-          'model': groqDefaultModel,
-        };
+        return {'baseUrl': groqBaseUrl, 'model': groqDefaultModel};
       case 'xai':
-        return {
-          'baseUrl': xaiBaseUrl,
-          'model': xaiDefaultModel,
-        };
+        return {'baseUrl': xaiBaseUrl, 'model': xaiDefaultModel};
       case 'phind':
-        return {
-          'baseUrl': phindBaseUrl,
-          'model': phindDefaultModel,
-        };
+        return {'baseUrl': phindBaseUrl, 'model': phindDefaultModel};
       case 'elevenlabs':
         return {
           'baseUrl': elevenLabsBaseUrl,
@@ -187,26 +169,17 @@ class ProviderDefaults {
           'supportedAudioFormats': elevenLabsSupportedAudioFormats,
         };
       case 'ollama':
-        return {
-          'baseUrl': ollamaBaseUrl,
-          'model': ollamaDefaultModel,
-        };
+        return {'baseUrl': ollamaBaseUrl, 'model': ollamaDefaultModel};
       // OpenAI-compatible providers
       case 'openrouter':
-        return {
-          'baseUrl': openRouterBaseUrl,
-          'model': openRouterDefaultModel,
-        };
+        return {'baseUrl': openRouterBaseUrl, 'model': openRouterDefaultModel};
       case 'github-copilot':
         return {
           'baseUrl': githubCopilotBaseUrl,
           'model': githubCopilotDefaultModel,
         };
       case 'together-ai':
-        return {
-          'baseUrl': togetherAIBaseUrl,
-          'model': togetherAIDefaultModel,
-        };
+        return {'baseUrl': togetherAIBaseUrl, 'model': togetherAIDefaultModel};
       default:
         throw ArgumentError('Unknown provider: $providerId');
     }
@@ -274,10 +247,7 @@ class ProviderDefaults {
           LLMCapability.toolCalling,
         };
       case 'elevenlabs':
-        return {
-          LLMCapability.textToSpeech,
-          LLMCapability.speechToText,
-        };
+        return {LLMCapability.textToSpeech, LLMCapability.speechToText};
       case 'ollama':
         return {
           LLMCapability.chat,
@@ -417,15 +387,7 @@ class OpenAICompatibleDefaults {
 
   /// Get all OpenAI-compatible configurations
   static List<Map<String, dynamic>> getAllConfigs() {
-    return [
-      deepseek,
-      groq,
-      xai,
-      phind,
-      openRouter,
-      githubCopilot,
-      togetherAI,
-    ];
+    return [deepseek, groq, xai, phind, openRouter, githubCopilot, togetherAI];
   }
 
   /// Get configuration by provider ID
